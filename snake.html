@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Spon Jam - Snake!</title>
+	<script type="text/javascript" src="phaser.min.js"></script>
+    <style type="text/css">
+        body {
+            margin: 0;
+        }
+    </style>
+</head>
+<body>
+
+<h1>Snaaaake</h1>
+
+<script type="text/javascript">
+
+var game = new Phaser.Game(800, 600, Phaser.AUTO, '', { preload: preload, create: create, update: update });
+
+	function preload() {
+
+		game.load.image('bg', 'background.png');
+		game.load.image('block', 'snake.png');
+		game.load.image('pellet', 'pellet.png');
+
+	}
+
+	// Declare variables here
+	var player;
+	var cursors;
+	var pellet;
+	var tail;
+	var tailPositions = new Array();
+
+	var direction = {
+		None: 0,
+		Up: 1,
+		Down: 2,
+		Left: 3,
+		Right: 4
+	};
+
+	var gameStarted = false;
+
+	var playerSpeed = 300;
+	var playerDirection = direction.None;
+	var tailSpacing = 4;
+	var canvasPadding = 30;
+
+	function create() {
+		// Enables physics for collision
+		game.physics.startSystem(Phaser.Physics.ARCADE);
+
+		// Load background
+		game.add.tileSprite(0, 0, 800, 600, 'bg');
+
+		// Load snake
+		player = game.add.sprite(400, 300, 'block');
+
+		// Group together the tail :)
+		tail = game.add.group();
+
+		// Init tail positions array or whatever
+		for (var i = 0; i < 300; i++) {
+			tailPositions[i] = new Phaser.Point(400, 300);
+		}
+
+		// Load pellet
+		pellet = game.add.sprite(100, 200, 'pellet');
+
+		// Enable physics on the player
+    	game.physics.arcade.enable(player);
+
+    //Player physics properies
+    	player.body.collideWorldBounds = true;
+
+    //  Our controls.
+    	cursors = game.input.keyboard.createCursorKeys();
+
+   }
+
+	function update() {
+		// Begin when player input is received
+		if (gameStarted == false) {
+			if (cursors.right.isDown) {
+				gameStarted = true;
+				playerDirection = direction.Right;
+			}
+
+			if (cursors.left.isDown) {
+				gameStarted = true;
+				playerDirection = direction.Left;
+			}
+
+			if (cursors.up.isDown) {
+				gameStarted = true;
+				playerDirection = direction.Up;
+			}
+
+			if (cursors.down.isDown) {
+				gameStarted = true;
+				playerDirection = direction.Down;
+			}
+		}
+		else {
+			if(checkOverlap(player, pellet))
+			{
+				eatPellet();
+			}
+
+			getInput();
+			movePlayer();
+			moveTail();
+		}
+	}
+
+// Other functions
+
+	function getInput() {
+		if (cursors.right.isDown) {
+			playerDirection = direction.Right;
+		}
+
+		if (cursors.left.isDown) {
+			playerDirection = direction.Left;
+		}
+
+		if (cursors.up.isDown) {
+			playerDirection = direction.Up;
+		}
+
+		if (cursors.down.isDown) {
+			playerDirection = direction.Down;
+		}
+	}
+
+	function movePlayer() {
+		if(playerDirection == direction.Left) {
+			player.body.velocity.x = -playerSpeed;
+			player.body.velocity.y = 0;
+		}
+
+		else if(playerDirection == direction.Right) {
+			player.body.velocity.x = playerSpeed;
+			player.body.velocity.y = 0;
+		}
+
+		else if(playerDirection == direction.Up) {
+			player.body.velocity.y = -playerSpeed;
+			player.body.velocity.x = 0;
+		}
+
+		else if(playerDirection == direction.Down) {
+			player.body.velocity.y = playerSpeed;
+			player.body.velocity.x = 0;
+		}
+	}
+
+	function eatPellet() {
+		pellet.kill();
+		pellet = game.add.sprite(
+			canvasPadding + Math.random() * (800 - canvasPadding * 3),
+			canvasPadding + Math.random() * (600 - canvasPadding * 3),
+			'pellet');
+
+		addTailPiece();
+
+	}
+
+	function addTailPiece() {
+		var tailPiece = tail.create(player.position.x, player.position.y, 'block');
+
+	}
+
+	function moveTail() {
+		// Update tail positions
+		var pos = tailPositions.pop();
+
+		pos.setTo(player.x, player.y);
+
+		tailPositions.unshift(pos);
+
+		// Actually move the tail pieces
+		for(var i = 0; i < tail.length; i++){
+			// Get the position for this piece
+			pos = tailPositions[(i+1) * tailSpacing];
+			// Assign the position
+			if(tail) {
+				this.game.debug.text("Tail exists!!", 20, 20, 'white', 'Helvetica');
+			}
+			if (tail.getChildAt(i)){
+				this.game.debug.text("Tail "+i+" exists", 20, 50, 'white', 'Helvetica');
+			};
+			tail.getChildAt(i).position = pos;
+		}
+	}
+
+	function checkOverlap(spriteA, spriteB) {
+		var boundsA = spriteA.getBounds();
+		var boundsB = spriteB.getBounds();
+
+		return Phaser.Rectangle.intersects(boundsA, boundsB);
+	}
+
+</script>
+
+</body>
+</html>
